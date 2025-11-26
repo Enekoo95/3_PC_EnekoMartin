@@ -3,32 +3,32 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "GPU/tex.h"
-#include "GPU/mat.h"
-#include "GPU/geo.h"
-
+#include "GPU/Geo.h"
+#include "GPU/Mat.h"
+#include "GPU/Tex.h"
 
 class App {
 public:
     App();
     ~App();
+    
     void run();
+    void init();
+    void mainLoop();
+    void cleanup();
 
 private:
     GLFWwindow* window;
 
-
     unsigned int shader;
-    unsigned int tex1, tex2, texRotate;
-    unsigned int quadVAO;
+    unsigned int tex1, tex2;
 
+    Geo circle;
+    Geo triangle;
+    Geo square;
 
-    void init();
-    void createShader();
-    void loadTextures();
-    void createGeometry();
-    void mainLoop();
-    void cleanup();
+    Mat mat;
+    Tex tex;
 };
 
 #endif

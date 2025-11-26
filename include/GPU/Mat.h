@@ -6,11 +6,8 @@
 
 class Mat {
 public:
-    Mat() = default;
-    ~Mat() = default;
-
-    unsigned int compileShaders(const std::string& vsPath, const std::string& fsPath);
     std::string loadFile(const std::string& path);
+    unsigned int compileShaders(const std::string& vsPath, const std::string& fsPath);
 };
 
-#endif // MAT_H
+#endif

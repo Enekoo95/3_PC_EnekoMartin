@@ -12,4 +12,4 @@ public:
     unsigned int loadTexture(const std::string& path);
 };
 
-#endif // TEX_H
+#endif

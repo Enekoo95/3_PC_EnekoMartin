@@ -2,7 +2,6 @@
 #define GEO_H
 
 #include <glad/glad.h>
-#include <glm/glm.hpp>
 #include <vector>
 
 class Geo {
@@ -14,12 +13,12 @@ public:
     void createTriangle();
     void createSquare();
 
-    void bind();
+    void bind() const;
     unsigned int getCount() const { return count; }
 
 private:
-    unsigned int vao, vbo;
-    unsigned int count;
+    unsigned int vao = 0, vbo = 0;
+    unsigned int count = 0;
 };
 
-#endif // GEO_H
+#endif

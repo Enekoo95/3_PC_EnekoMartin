@@ -13,7 +13,7 @@ App::~App() {
 }
 
 void App::init() {
-    // Inicializar GLFW
+
     if (!glfwInit()) {
         std::cerr << "ERROR: Failed to initialize GLFW\n";
         exit(-1);
@@ -38,36 +38,54 @@ void App::init() {
 
     glViewport(0, 0, 800, 800);
 
-    // Shaders
-    shader = Mat::compileShaders("../shaders/basic.vs", "../shaders/basic.fs");
+    // SHADER
+    shader = mat.compileShaders("../shaders/basic.vs", "../shaders/basic.fs");
 
-    // Geometría
-    Geo::creatCircle(vaoCircle, vboCircle, circleCount);
-    Geo::creatTriangle(vaoTriangle, vboTriangle);
-    Geo::creatSquare(vaoSquare, vboSquare, vaoRotSquare, vboRotSquare);
+    // FIGURAS (usando tu clase real)
+    circle.createCircle(40);
+    triangle.createTriangle();
+    square.createSquare();
 
-    // Texturas
-    tex1 = Tex::load("../textures/Paisaje.jpg");
-    tex2 = Tex::load("../textures/Panda.jpg");
-    texRotate = Tex::load("../textures/Texture2.jpg");
+    // TEXTURAS
+    tex1 = tex.loadTexture("../textures/Paisaje.jpg");
+    tex2 = tex.loadTexture("../textures/Panda.jpg");
 }
 
 void App::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
+
         glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shader);
+
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 proj = glm::ortho(-1.f, 1.f, -1.f, 1.f);
         glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, false, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, glm::value_ptr(proj));
 
-        // Dibujar figuras usando GEO
-        Geo::drawCircle(vaoCircle, circleCount, shader);
-        Geo::drawTriangle(vaoTriangle, shader);
-        Geo::drawSquare(vaoSquare, shader, tex1, tex2);
-        Geo::drawRotatingSquare(vaoRotSquare, shader, texRotate);
+        // -----------------------------
+        // DIBUJAR CÍRCULO
+        // -----------------------------
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex1);
+
+        circle.bind();
+        glDrawArrays(GL_TRIANGLE_FAN, 0, circle.getCount());
+
+        // -----------------------------
+        // DIBUJAR TRIÁNGULO
+        // -----------------------------
+        triangle.bind();
+        glDrawArrays(GL_TRIANGLES, 0, triangle.getCount());
+
+        // -----------------------------
+        // DIBUJAR CUADRADO
+        // -----------------------------
+        glBindTexture(GL_TEXTURE_2D, tex2);
+
+        square.bind();
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, square.getCount());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -75,12 +93,10 @@ void App::mainLoop() {
 }
 
 void App::cleanup() {
-    glDeleteVertexArrays(1, &vaoCircle);
-    glDeleteVertexArrays(1, &vaoTriangle);
-    glDeleteVertexArrays(1, &vaoSquare);
-    glDeleteVertexArrays(1, &vaoRotSquare);
     glDeleteProgram(shader);
-
     glfwDestroyWindow(window);
     glfwTerminate();
+}
+void App::run() {
+    mainLoop();
 }
