@@ -3,7 +3,10 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <string>
+#include "GPU/tex.h"
+#include "GPU/mat.h"
+#include "GPU/geo.h"
+
 
 class App {
 public:
@@ -13,17 +16,19 @@ public:
 
 private:
     GLFWwindow* window;
-    unsigned int VAO, VBO, EBO;
-    unsigned int shaderProgram;
-    unsigned int texture;
+
+
+    unsigned int shader;
+    unsigned int tex1, tex2, texRotate;
+    unsigned int quadVAO;
+
 
     void init();
-    void cleanup();
-    void initShaders();
-    void initSquare();
+    void createShader();
+    void loadTextures();
+    void createGeometry();
     void mainLoop();
-    void loadTexture(const std::string& path);
-    std::string loadShaderSource(const std::string& path);
+    void cleanup();
 };
 
 #endif
