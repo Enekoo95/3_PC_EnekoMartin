@@ -1,56 +1,60 @@
 #include "GPU/Geo.h"
 #include <cmath>
 
-void Geo::createCircle(int segments) {
+void Geo::createCube() {
+    float vertices[] = {
+        // posiciones          // UVs
+        -0.5f, -0.5f, -0.5f,  0,0,
+         0.5f, -0.5f, -0.5f,  1,0,
+         0.5f,  0.5f, -0.5f,  1,1,
+         0.5f,  0.5f, -0.5f,  1,1,
+        -0.5f,  0.5f, -0.5f,  0,1,
+        -0.5f, -0.5f, -0.5f,  0,0,
 
-    count = segments + 2;
-    std::vector<float> data;
+        -0.5f, -0.5f,  0.5f,  0,0,
+         0.5f, -0.5f,  0.5f,  1,0,
+         0.5f,  0.5f,  0.5f,  1,1,
+         0.5f,  0.5f,  0.5f,  1,1,
+        -0.5f,  0.5f,  0.5f,  0,1,
+        -0.5f, -0.5f,  0.5f,  0,0,
 
-    data.push_back(0.0f); data.push_back(0.0f); data.push_back(0.0f);
-    data.push_back(0.5f); data.push_back(0.5f);
+        -0.5f,  0.5f,  0.5f,  1,0,
+        -0.5f,  0.5f, -0.5f,  1,1,
+        -0.5f, -0.5f, -0.5f,  0,1,
+        -0.5f, -0.5f, -0.5f,  0,1,
+        -0.5f, -0.5f,  0.5f,  0,0,
+        -0.5f,  0.5f,  0.5f,  1,0,
 
-    for (int i = 0; i <= segments; i++) {
-        float ang = (float)i / segments * 6.28318f;
-        float x = cos(ang) * 0.3f;
-        float y = sin(ang) * 0.3f;
+         0.5f,  0.5f,  0.5f,  1,0,
+         0.5f,  0.5f, -0.5f,  1,1,
+         0.5f, -0.5f, -0.5f,  0,1,
+         0.5f, -0.5f, -0.5f,  0,1,
+         0.5f, -0.5f,  0.5f,  0,0,
+         0.5f,  0.5f,  0.5f,  1,0,
 
-        data.push_back(x);
-        data.push_back(y);
-        data.push_back(0.0f);
-        data.push_back(x * 0.5f + 0.5f);
-        data.push_back(y * 0.5f + 0.5f);
-    }
+        -0.5f, -0.5f, -0.5f,  0,1,
+         0.5f, -0.5f, -0.5f,  1,1,
+         0.5f, -0.5f,  0.5f,  1,0,
+         0.5f, -0.5f,  0.5f,  1,0,
+        -0.5f, -0.5f,  0.5f,  0,0,
+        -0.5f, -0.5f, -0.5f,  0,1,
 
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), data.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-}
-
-void Geo::createTriangle() {
-
-    float tri[] = {
-        0.0f, 0.5f, 0, 0.5f,1.0f,
-       -0.4f,-0.3f,0, 0.0f,0.0f,
-        0.4f,-0.3f,0, 1.0f,0.0f
+        -0.5f,  0.5f, -0.5f,  0,1,
+         0.5f,  0.5f, -0.5f,  1,1,
+         0.5f,  0.5f,  0.5f,  1,0,
+         0.5f,  0.5f,  0.5f,  1,0,
+        -0.5f,  0.5f,  0.5f,  0,0,
+        -0.5f,  0.5f, -0.5f,  0,1
     };
 
-    count = 3;
+    count = 36; // 12 triángulos * 3 vertices
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(tri), tri, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -59,30 +63,7 @@ void Geo::createTriangle() {
     glEnableVertexAttribArray(1);
 }
 
-void Geo::createSquare() {
 
-    float sq[] = {
-       -0.3f,-0.3f,0, 0,0,
-       -0.3f, 0.3f,0, 0,1,
-        0.3f,-0.3f,0, 1,0,
-        0.3f, 0.3f,0, 1,1
-    };
-
-    count = 4;
-
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(sq), sq, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-}
 
 void Geo::bind() const {
     glBindVertexArray(vao);

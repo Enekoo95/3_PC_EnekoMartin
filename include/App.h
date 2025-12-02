@@ -11,13 +11,13 @@ class App {
 public:
     App();
     ~App();
-    
     void run();
+
+private:
     void init();
     void mainLoop();
     void cleanup();
 
-private:
     GLFWwindow* window;
 
     unsigned int shader;

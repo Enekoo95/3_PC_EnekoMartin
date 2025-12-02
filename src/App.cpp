@@ -13,7 +13,6 @@ App::~App() {
 }
 
 void App::init() {
-
     if (!glfwInit()) {
         std::cerr << "ERROR: Failed to initialize GLFW\n";
         exit(-1);
@@ -23,7 +22,7 @@ void App::init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(800, 800, "Figuras", nullptr, nullptr);
+    window = glfwCreateWindow(800, 800, "Cubo 3D Angulado", nullptr, nullptr);
     if (!window) {
         std::cerr << "ERROR: Failed to create GLFW window\n";
         glfwTerminate();
@@ -37,55 +36,46 @@ void App::init() {
     }
 
     glViewport(0, 0, 800, 800);
+    glEnable(GL_DEPTH_TEST); // profundidad para 3D
 
-    // SHADER
+    // Shaders
     shader = mat.compileShaders("../shaders/basic.vs", "../shaders/basic.fs");
 
-    // FIGURAS (usando tu clase real)
-    circle.createCircle(40);
-    triangle.createTriangle();
-    square.createSquare();
+    // Crear cubo
+    square.createCube();
 
-    // TEXTURAS
-    tex1 = tex.loadTexture("../textures/Paisaje.jpg");
-    tex2 = tex.loadTexture("../textures/Panda.jpg");
+    // Cargar textura
+    tex1 = tex.loadTexture("../textures/Panda.jpg");
 }
 
 void App::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
 
         glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shader);
 
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 proj = glm::ortho(-1.f, 1.f, -1.f, 1.f);
-        glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, false, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, glm::value_ptr(proj));
+        // Cámara fija desde un ángulo usando lookAt
+        glm::vec3 camPos = glm::vec3(2.0f, 2.0f, 2.0f); // posición de cámara
+        glm::vec3 camTarget = glm::vec3(0.0f, 0.0f, 0.0f); // hacia el centro
+        glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f); // arriba
 
-        // -----------------------------
-        // DIBUJAR CÍRCULO
-        // -----------------------------
-        glActiveTexture(GL_TEXTURE0);
+        glm::mat4 view = glm::lookAt(camPos, camTarget, camUp);
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.f / 800.f, 0.1f, 100.f);
+
+        glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniform1i(glGetUniformLocation(shader, "ourTexture"), 0);
+
+        // Cubo centrado, sin rotación
+        glm::mat4 model = glm::mat4(1.0f);
+        glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+        // Dibujar cubo
         glBindTexture(GL_TEXTURE_2D, tex1);
-
-        circle.bind();
-        glDrawArrays(GL_TRIANGLE_FAN, 0, circle.getCount());
-
-        // -----------------------------
-        // DIBUJAR TRIÁNGULO
-        // -----------------------------
-        triangle.bind();
-        glDrawArrays(GL_TRIANGLES, 0, triangle.getCount());
-
-        // -----------------------------
-        // DIBUJAR CUADRADO
-        // -----------------------------
-        glBindTexture(GL_TEXTURE_2D, tex2);
-
         square.bind();
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, square.getCount());
+        glDrawArrays(GL_TRIANGLES, 0, square.getCount());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -97,6 +87,7 @@ void App::cleanup() {
     glfwDestroyWindow(window);
     glfwTerminate();
 }
+
 void App::run() {
     mainLoop();
 }

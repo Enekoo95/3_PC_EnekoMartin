@@ -15,7 +15,6 @@ std::string Mat::loadFile(const std::string& path) {
 }
 
 unsigned int Mat::compileShaders(const std::string& vsPath, const std::string& fsPath) {
-
     std::string vsrc = loadFile(vsPath);
     std::string fsrc = loadFile(fsPath);
 

@@ -9,9 +9,8 @@ public:
     Geo() = default;
     ~Geo() = default;
 
-    void createCircle(int segments = 40);
-    void createTriangle();
-    void createSquare();
+    void createCube();
+
 
     void bind() const;
     unsigned int getCount() const { return count; }
