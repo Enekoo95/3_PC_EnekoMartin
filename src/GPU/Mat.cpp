@@ -14,9 +14,11 @@ std::string Mat::loadFile(const std::string& path) {
     return ss.str();
 }
 
-unsigned int Mat::compileShaders(const std::string& vsPath, const std::string& fsPath) {
+bool Mat::compileShaders(const std::string& vsPath, const std::string& fsPath) {
     std::string vsrc = loadFile(vsPath);
     std::string fsrc = loadFile(fsPath);
+
+    if (vsrc.empty() || fsrc.empty()) return false;
 
     const char* v = vsrc.c_str();
     const char* f = fsrc.c_str();
@@ -25,17 +27,40 @@ unsigned int Mat::compileShaders(const std::string& vsPath, const std::string& f
     glShaderSource(vertex, 1, &v, nullptr);
     glCompileShader(vertex);
 
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
+        std::cerr << "Error compilando Vertex Shader:\n" << infoLog << "\n";
+        return false;
+    }
+
     unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &f, nullptr);
     glCompileShader(fragment);
 
-    unsigned int program = glCreateProgram();
-    glAttachShader(program, vertex);
-    glAttachShader(program, fragment);
-    glLinkProgram(program);
+    glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragment, 512, nullptr, infoLog);
+        std::cerr << "Error compilando Fragment Shader:\n" << infoLog << "\n";
+        return false;
+    }
+
+    MatID = glCreateProgram();
+    glAttachShader(MatID, vertex);
+    glAttachShader(MatID, fragment);
+    glLinkProgram(MatID);
+
+    glGetProgramiv(MatID, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(MatID, 512, nullptr, infoLog);
+        std::cerr << "Error linking Shader Program:\n" << infoLog << "\n";
+        return false;
+    }
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    return program;
+    return true;
 }
