@@ -21,6 +21,6 @@ void main()
 
     float diff = max(dot(N, normalize(lightDir)),0.0);
     color.rgb *= diff + 0.3;
-    FragColor = color;
+    FragColor = grass;
 
 }

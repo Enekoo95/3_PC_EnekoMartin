@@ -4,38 +4,25 @@
 #include <glm/gtc/type_ptr.hpp>
 
 // --- Constructor / Destructor ---
-App::App() {
-    init();
-}
-
-App::~App() {
-    cleanup();
-}
+App::App() { init(); }
+App::~App() { cleanup(); }
 
 // --- Inicialización ---
 void App::init() {
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW\n";
-        exit(-1);
-    }
+    if (!glfwInit()) { std::cerr << "Failed to initialize GLFW\n"; exit(-1); }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window = glfwCreateWindow(800, 800, "Terrain 3D", nullptr, nullptr);
-    if (!window) {
-        std::cerr << "Failed to create window\n";
-        glfwTerminate();
-        exit(-1);
-    }
+    if (!window) { std::cerr << "Failed to create window\n"; glfwTerminate(); exit(-1); }
 
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to init GLAD\n";
-        exit(-1);
+        std::cerr << "Failed to init GLAD\n"; exit(-1);
     }
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_cb);
@@ -47,20 +34,17 @@ void App::init() {
     glEnable(GL_DEPTH_TEST);
 
     // --- Shaders ---
-    if (!mat.compileShaders("../shaders/basic.vs", "../shaders/basic.fs")) {
-        std::cerr << "Error al compilar shaders\n";
-        exit(-1);
-    }
+    mat.compileShaders("../shaders/basic.vs", "../shaders/basic.fs");
 
     // --- Terreno ---
     if (!terrain.loadHeightmap("../textures/heightmap.png"))
         std::cout << "Using flat terrain\n";
 
-    terrain.generateMesh(1.0f);
+    terrain.generateMesh(300.0f);
 
     // --- Texturas ---
-    tex1 = tex.loadTexture("../textures/grass.jpg");
-    tex2 = tex.loadTexture("../textures/rock.jpg");
+    grass.load("../textures/grass.png");
+    Rock.load("../textures/rock.jpg");
 
     updateCameraVectors();
 }
@@ -108,19 +92,23 @@ void App::mainLoop() {
 
         glUniform3f(glGetUniformLocation(mat.getID(), "lightDir"), -1.0f, -1.0f, -1.0f);
 
+        // --- Texturas ---
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tex1);
+        glBindTexture(GL_TEXTURE_2D, grass.getID());
         glUniform1i(glGetUniformLocation(mat.getID(), "ourTexture"), 0);
 
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, tex2);
+        glBindTexture(GL_TEXTURE_2D, Rock.getID());
         glUniform1i(glGetUniformLocation(mat.getID(), "secondTexture"), 1);
 
         glUniform1i(glGetUniformLocation(mat.getID(), "useSecondTexture"), 1);
         glUniform1i(glGetUniformLocation(mat.getID(), "useTexture"), 1);
 
+
+        // --- Render terreno ---
+        terrain.activateTexture();
         terrain.bind();
-        glDrawArrays(GL_TRIANGLES, 0, terrain.getCount());
+        glDrawElements(GL_TRIANGLES, terrain.getIndexCount(), GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
