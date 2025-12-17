@@ -10,6 +10,8 @@
 #include "GPU/Mat.h"
 #include "GPU/Tex.h"
 #include "GPU/Camera.h"
+#include "GPU/Water.h"
+
 
 class App {
 public:
