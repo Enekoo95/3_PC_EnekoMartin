@@ -44,7 +44,7 @@ void App::init() {
 
     // --- Texturas ---
     grass.load("../textures/grass.png");
-    Rock.load("../textures/rock.jpg");
+    rock.load("../textures/rock.jpg");
 
     updateCameraVectors();
 }
@@ -80,34 +80,34 @@ void App::mainLoop() {
         glClearColor(0.1f, 0.12f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        mat.use();
+// --- Render ---
+mat.use();
 
-        glm::mat4 view = glm::lookAt(camPos, camPos + camFront, camUp);
-        glm::mat4 projection = glm::perspective(glm::radians(fov), 800.0f / 800.0f, 0.1f, 500.0f);
-        glm::mat4 model = glm::mat4(1.0f);
+// matrices
+glm::mat4 view = glm::lookAt(camPos, camPos + camFront, camUp);
+glm::mat4 projection = glm::perspective(glm::radians(fov), 800.0f / 800.0f, 0.1f, 1000.0f);
+glm::mat4 model = glm::mat4(1.0f);
 
-        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-        glUniform3f(glGetUniformLocation(mat.getID(), "lightDir"), -1.0f, -1.0f, -1.0f);
+// luz
+glUniform3f(glGetUniformLocation(mat.getID(), "lightDir"), -1.0f, -1.0f, -1.0f);
 
-        // --- Texturas ---
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, grass.getID());
-        glUniform1i(glGetUniformLocation(mat.getID(), "ourTexture"), 0);
+// --- TEXTURAS (ORDEN CORRECTO) ---
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, grass.getID());
+glUniform1i(glGetUniformLocation(mat.getID(), "ourTexture"), 0);
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, Rock.getID());
-        glUniform1i(glGetUniformLocation(mat.getID(), "secondTexture"), 1);
+glActiveTexture(GL_TEXTURE1);
+glBindTexture(GL_TEXTURE_2D, rock.getID());
+glUniform1i(glGetUniformLocation(mat.getID(), "secondTexture"), 1);
 
-        glUniform1i(glGetUniformLocation(mat.getID(), "useSecondTexture"), 1);
-        glUniform1i(glGetUniformLocation(mat.getID(), "useTexture"), 1);
+// --- Dibujar terreno ---
+terrain.bind();
+terrain.draw();
 
-
-        // --- Render terreno ---
-        terrain.activateTexture();
-        terrain.bind();
         glDrawElements(GL_TRIANGLES, terrain.getIndexCount(), GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);

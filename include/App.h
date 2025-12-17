@@ -33,7 +33,7 @@ private:
     Terrain terrain;
     Mat mat;
     Tex grass;
-    Tex Rock;
+    Tex rock;
 
     // Camera
     glm::vec3 camPos = glm::vec3(50.0f, 30.0f, 50.0f);
