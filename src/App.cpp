@@ -1,15 +1,17 @@
 #include "App.h"
 #include <iostream>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// --- Constructor / Destructor ---
+// ---------------- Constructor / Destructor ----------------
 App::App() { init(); }
 App::~App() { cleanup(); }
 
-// --- Inicialización ---
+// ---------------- Init ----------------
 void App::init() {
-    if (!glfwInit()) { std::cerr << "Failed to initialize GLFW\n"; exit(-1); }
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW\n";
+        exit(-1);
+    }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -22,7 +24,7 @@ void App::init() {
     glfwSetWindowUserPointer(window, this);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to init GLAD\n"; exit(-1);
+        std::cerr << "Failed to initialize GLAD\n"; exit(-1);
     }
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_cb);
@@ -30,45 +32,40 @@ void App::init() {
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    glViewport(0, 0, 800, 800);
     glEnable(GL_DEPTH_TEST);
 
-    // --- Shaders ---
     mat.compileShaders("../shaders/basic.vs", "../shaders/basic.fs");
 
-    // --- Terreno ---
     if (!terrain.loadHeightmap("../textures/heightmap.png"))
         std::cout << "Using flat terrain\n";
 
     terrain.generateMesh(300.0f);
 
-    // --- Texturas ---
     grass.load("../textures/grass.png");
     rock.load("../textures/rock.jpg");
 
-    updateCameraVectors();
+    camera = Camera(
+        glm::vec3(50.0f, 30.0f, 50.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        -135.0f,
+        -30.0f
+    );
 }
 
-// --- Input ---
+// ---------------- Input ----------------
 void App::processInput(float dt) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    float velocity = movementSpeed * dt;
-    glm::vec3 forward = glm::normalize(glm::vec3(camFront.x, 0, camFront.z));
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camPos += forward * velocity;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camPos -= forward * velocity;
-
-    glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camPos -= right * velocity;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camPos += right * velocity;
-
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camPos.y += velocity;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) camPos.y -= velocity;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.ProcessKeyboard(FORWARD, dt);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.ProcessKeyboard(BACKWARD, dt);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.ProcessKeyboard(LEFT, dt);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.ProcessKeyboard(RIGHT, dt);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camera.ProcessKeyboard(UP, dt);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.ProcessKeyboard(DOWN, dt);
 }
 
-// --- Main Loop ---
+// ---------------- Main Loop ----------------
 void App::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = (float)glfwGetTime();
@@ -80,55 +77,45 @@ void App::mainLoop() {
         glClearColor(0.1f, 0.12f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-// --- Render ---
-mat.use();
+        mat.use();
 
-// matrices
-glm::mat4 view = glm::lookAt(camPos, camPos + camFront, camUp);
-glm::mat4 projection = glm::perspective(glm::radians(fov), 800.0f / 800.0f, 0.1f, 1000.0f);
-glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 800.0f, 0.1f, 1000.0f);
 
-glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
-// luz
-glUniform3f(glGetUniformLocation(mat.getID(), "lightDir"), -1.0f, -1.0f, -1.0f);
+        glUniform3f(glGetUniformLocation(mat.getID(), "lightDir"), -10.0f, -1.0f, -1.0f);
 
-// --- TEXTURAS (ORDEN CORRECTO) ---
-glActiveTexture(GL_TEXTURE0);
-glBindTexture(GL_TEXTURE_2D, grass.getID());
-glUniform1i(glGetUniformLocation(mat.getID(), "ourTexture"), 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, grass.getID());
+        glUniform1i(glGetUniformLocation(mat.getID(), "ourTexture"), 0);
 
-glActiveTexture(GL_TEXTURE1);
-glBindTexture(GL_TEXTURE_2D, rock.getID());
-glUniform1i(glGetUniformLocation(mat.getID(), "secondTexture"), 1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, rock.getID());
+        glUniform1i(glGetUniformLocation(mat.getID(), "secondTexture"), 1);
 
-// --- Dibujar terreno ---
-terrain.bind();
-terrain.draw();
-
-        glDrawElements(GL_TRIANGLES, terrain.getIndexCount(), GL_UNSIGNED_INT, 0);
+        terrain.bind();
+        terrain.draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 }
 
-// --- Limpieza ---
+// ---------------- Cleanup ----------------
 void App::cleanup() {
     if (mat.getID()) glDeleteProgram(mat.getID());
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
-// --- Run ---
+// ---------------- Run ----------------
 void App::run() { mainLoop(); }
 
-// --- Callbacks ---
-void App::framebuffer_size_cb(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
+// ---------------- Callbacks ----------------
+void App::framebuffer_size_cb(GLFWwindow*, int width, int height) { glViewport(0, 0, width, height); }
 
 void App::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     App* app = GET_APP(window);
@@ -142,35 +129,16 @@ void App::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
     float xoffset = (float)xpos - app->lastX;
     float yoffset = app->lastY - (float)ypos;
+
     app->lastX = (float)xpos;
     app->lastY = (float)ypos;
 
-    xoffset *= app->mouseSensitivity;
-    yoffset *= app->mouseSensitivity;
-
-    app->yaw += xoffset;
-    app->pitch += yoffset;
-
-    if (app->pitch > 89.0f) app->pitch = 89.0f;
-    if (app->pitch < -89.0f) app->pitch = -89.0f;
-
-    app->updateCameraVectors();
+    app->camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void App::scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset) {
+void App::scroll_callback(GLFWwindow* window, double, double yoffset) {
     App* app = GET_APP(window);
     if (!app) return;
 
-    app->fov -= (float)yoffset;
-    if (app->fov < 20.0f) app->fov = 20.0f;
-    if (app->fov > 90.0f) app->fov = 90.0f;
-}
-
-// --- Cámara ---
-void App::updateCameraVectors() {
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    camFront = glm::normalize(front);
+    app->camera.ProcessMouseScroll((float)yoffset);
 }

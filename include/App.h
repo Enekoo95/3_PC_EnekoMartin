@@ -4,9 +4,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+
+
 #include "GPU/Terrain.h"
 #include "GPU/Mat.h"
 #include "GPU/Tex.h"
+#include "GPU/Camera.h"
 
 class App {
 public:
@@ -19,7 +22,6 @@ private:
     void mainLoop();
     void cleanup();
     void processInput(float dt);
-    void updateCameraVectors();
 
     static void framebuffer_size_cb(GLFWwindow* window, int width, int height);
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -27,30 +29,21 @@ private:
 
     GLFWwindow* window;
 
-    unsigned int shader;
-    unsigned int tex1, tex2;
-
     Terrain terrain;
     Mat mat;
     Tex grass;
     Tex rock;
 
-    // Camera
-    glm::vec3 camPos = glm::vec3(50.0f, 30.0f, 50.0f);
-    glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    float yaw = -135.0f;
-    float pitch = -30.0f;
-    float fov = 45.0f;
-    float movementSpeed = 20.0f;
-    float mouseSensitivity = 0.1f;
+    Camera camera;
 
-    float lastX = 400, lastY = 400;
+    float lastX = 400.0f;
+    float lastY = 400.0f;
     bool firstMouse = true;
     float lastFrame = 0.0f;
 };
 
-// Helper to obtain App* from GLFW window pointer
-inline App* GET_APP(GLFWwindow* w) { return reinterpret_cast<App*>(glfwGetWindowUserPointer(w)); }
+inline App* GET_APP(GLFWwindow* w) {
+    return reinterpret_cast<App*>(glfwGetWindowUserPointer(w));
+}
 
 #endif
