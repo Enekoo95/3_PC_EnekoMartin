@@ -5,13 +5,11 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-
 #include "GPU/Terrain.h"
 #include "GPU/Mat.h"
 #include "GPU/Tex.h"
 #include "GPU/Camera.h"
 #include "GPU/Water.h"
-
 
 class App {
 public:
@@ -25,17 +23,32 @@ private:
     void cleanup();
     void processInput(float dt);
 
-    static void framebuffer_size_cb(GLFWwindow* window, int width, int height);
-    static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+    static void framebuffer_size_cb(GLFWwindow*, int, int);
+    static void mouse_callback(GLFWwindow*, double, double);
+    static void scroll_callback(GLFWwindow*, double, double);
 
     GLFWwindow* window;
 
+    // =====================
+    // TERRENO
+    // =====================
     Terrain terrain;
+    float terrainHeightScale = 300.0f;
+
     Mat mat;
     Tex grass;
     Tex rock;
 
+    // =====================
+    // AGUA
+    // =====================
+    Water* water = nullptr;
+    Mat waterMat;
+    Tex waterTex;
+
+    // =====================
+    // CÁMARA
+    // =====================
     Camera camera;
 
     float lastX = 400.0f;

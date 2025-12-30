@@ -9,16 +9,22 @@ class Terrain {
 public:
     Terrain();
 
+    // Carga el heightmap
     bool loadHeightmap(const std::string& path);
+
+    // Genera la malla del terreno
     void generateMesh(float scale);
 
+    // Render
     void bind() const;
-    void activateTexture() const { glBindTexture(GL_TEXTURE_2D, texture); }
-    void setTexture(unsigned int id) { texture = id; }
-
     void draw() const;
 
-    unsigned int getIndexCount() const { return indexCount; }
+    // Altura mínima REAL del terreno
+    float getMinHeight(float scale) const;
+
+    // Tamaño del terreno (para ajustar agua)
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
 
 private:
     int width, height;
@@ -26,7 +32,6 @@ private:
 
     unsigned int VAO, VBO, EBO;
     unsigned int indexCount;
-    unsigned int texture;
 };
 
 #endif
