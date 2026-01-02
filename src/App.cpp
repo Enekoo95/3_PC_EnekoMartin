@@ -1,6 +1,7 @@
 #include "App.h"
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
+#include <cstdlib>
 
 App::App() { init(); }
 App::~App() { cleanup(); }
@@ -11,7 +12,7 @@ void App::init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(800, 800, "Terrain + Water", nullptr, nullptr);
+    window = glfwCreateWindow(800, 800, "Mundo", nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
 
@@ -42,23 +43,46 @@ void App::init() {
     rock.load("../textures/rock.jpg");
 
     // =====================
-    // AGUA (ALTURA REAL DEL TERRENO)
+    // AGUA
     // =====================
-    float margin = 100.0f; // para que sobresalga un poco del terreno
-    float waterWidth = (float)terrain.getWidth() + margin;
-    float waterDepth = (float)terrain.getHeight() + margin;
-    float waterY = 20.0f; // altura del agua a nivel del suelo
+    float margin = 200.0f;
+    float waterWidth = terrain.getWidth() + margin;
+    float waterDepth = terrain.getHeight() + margin;
+    float waterY = terrain.getMinHeight(terrainHeightScale) + 1.0f;
 
     water = new Water(waterWidth, waterDepth, waterY);
-
-
     waterTex.load("../textures/water.jpg");
+
+    // =====================
+    // ÁRBOLES
+    // =====================
+    srand((unsigned int)time(nullptr));
+
+    for (int i = 0; i < 25; ++i) {
+        int x = rand() % terrain.getWidth();
+        int z = rand() % terrain.getHeight();
+
+        float y = terrain.getHeightAt(x, z);
+
+        // evitar agua
+        if (y < waterY + 2.0f) continue;
+
+        trees.emplace_back(
+            "../textures/Tree/tree.obj",
+            glm::vec3(
+                x - terrain.getWidth() / 2.0f,
+                y,
+                z - terrain.getHeight() / 2.0f
+            ),
+            0.8f + (rand() % 100) / 300.0f
+        );
+    }
 
     // =====================
     // CÁMARA
     // =====================
     camera = Camera(
-        glm::vec3(50.0f, 40.0f, 50.0f),
+        glm::vec3(50.0f, 50.0f, 50.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
         -135.0f,
         -30.0f
@@ -91,7 +115,7 @@ void App::mainLoop() {
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(
             glm::radians(camera.Zoom),
-            800.0f / 800.0f,
+            1.0f,
             0.1f,
             1000.0f
         );
@@ -100,15 +124,11 @@ void App::mainLoop() {
         // TERRENO
         // =====================
         mat.use();
-        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "view"),
-            1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "projection"),
-            1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "model"),
-            1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(mat.getID(), "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
-        glUniform3f(glGetUniformLocation(mat.getID(), "lightDir"),
-            -1.0f, -1.0f, -1.0f);
+        glUniform3f(glGetUniformLocation(mat.getID(), "lightDir"), -1.0f, -1.0f, -1.0f);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, grass.getID());
@@ -121,15 +141,18 @@ void App::mainLoop() {
         terrain.draw();
 
         // =====================
+        // ÁRBOLES
+        // =====================
+        for (const auto& tree : trees)
+            tree.draw(mat.getID());
+
+        // =====================
         // AGUA
         // =====================
         waterMat.use();
-        glUniformMatrix4fv(glGetUniformLocation(waterMat.getID(), "view"),
-            1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(waterMat.getID(), "projection"),
-            1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(waterMat.getID(), "model"),
-            1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+        glUniformMatrix4fv(glGetUniformLocation(waterMat.getID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(waterMat.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(waterMat.getID(), "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
         glUniform1f(glGetUniformLocation(waterMat.getID(), "time"), time);
 

@@ -4,12 +4,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <vector>
 
 #include "GPU/Terrain.h"
 #include "GPU/Mat.h"
 #include "GPU/Tex.h"
 #include "GPU/Camera.h"
 #include "GPU/Water.h"
+#include "GPU/Tree.h"
 
 class App {
 public:
@@ -27,7 +29,7 @@ private:
     static void mouse_callback(GLFWwindow*, double, double);
     static void scroll_callback(GLFWwindow*, double, double);
 
-    GLFWwindow* window;
+    GLFWwindow* window = nullptr;
 
     // =====================
     // TERRENO
@@ -45,6 +47,11 @@ private:
     Water* water = nullptr;
     Mat waterMat;
     Tex waterTex;
+
+    // =====================
+    // ÁRBOLES
+    // =====================
+    std::vector<Tree> trees;
 
     // =====================
     // CÁMARA

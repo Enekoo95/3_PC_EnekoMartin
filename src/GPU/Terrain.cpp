@@ -4,11 +4,7 @@
 #include <glm/glm.hpp>
 #include <algorithm>
 
-Terrain::Terrain()
-    : width(0), height(0),
-    VAO(0), VBO(0), EBO(0),
-    indexCount(0) {
-}
+Terrain::Terrain() {}
 
 bool Terrain::loadHeightmap(const std::string& path) {
     int n;
@@ -33,7 +29,7 @@ void Terrain::generateMesh(float scale) {
     if (width <= 1 || height <= 1) return;
 
     // ======================
-    // Calcular altura mínima
+    // Altura mínima
     // ======================
     float minH = heightData[0];
     for (float h : heightData)
@@ -48,12 +44,12 @@ void Terrain::generateMesh(float scale) {
     std::vector<Vertex> vertices(width * height);
     std::vector<unsigned int> indices;
 
-    // ======================
-    // Centrar terreno y normalizar altura
-    // ======================
     float offsetX = width * 0.5f;
     float offsetZ = height * 0.5f;
 
+    // ======================
+    // VÉRTICES
+    // ======================
     for (int z = 0; z < height; ++z) {
         for (int x = 0; x < width; ++x) {
             int i = z * width + x;
@@ -76,7 +72,7 @@ void Terrain::generateMesh(float scale) {
     }
 
     // ======================
-    // Calcular normales
+    // NORMALES
     // ======================
     for (int z = 1; z < height - 1; ++z) {
         for (int x = 1; x < width - 1; ++x) {
@@ -93,33 +89,33 @@ void Terrain::generateMesh(float scale) {
     }
 
     // ======================
-    // Índices
+    // ÍNDICES
     // ======================
     for (int z = 0; z < height - 1; ++z) {
         for (int x = 0; x < width - 1; ++x) {
-            int TL = z * width + x;
-            int TR = TL + 1;
-            int BL = (z + 1) * width + x;
-            int BR = BL + 1;
+            unsigned int TL = (unsigned int)(z * width + x);
+            unsigned int TR = TL + 1;
+            unsigned int BL = (unsigned int)((z + 1) * width + x);
+            unsigned int BR = BL + 1;
 
-            indices.push_back((unsigned int)TL);
-            indices.push_back((unsigned int)BL);
-            indices.push_back((unsigned int)TR);
+            indices.push_back(TL);
+            indices.push_back(BL);
+            indices.push_back(TR);
 
-            indices.push_back((unsigned int)TR);
-            indices.push_back((unsigned int)BL);
-            indices.push_back((unsigned int)BR);
+            indices.push_back(TR);
+            indices.push_back(BL);
+            indices.push_back(BR);
         }
     }
 
     indexCount = (unsigned int)indices.size();
 
     // ======================
-    // Buffers OpenGL
+    // OPENGL BUFFERS
     // ======================
-    if (VAO == 0) glGenVertexArrays(1, &VAO);
-    if (VBO == 0) glGenBuffers(1, &VBO);
-    if (EBO == 0) glGenBuffers(1, &EBO);
+    if (!VAO) glGenVertexArrays(1, &VAO);
+    if (!VBO) glGenBuffers(1, &VBO);
+    if (!EBO) glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
@@ -166,5 +162,16 @@ float Terrain::getMinHeight(float scale) const {
     for (float h : heightData)
         minH = std::min(minH, h);
 
-    return minH * scale;
+    return (minH - minH) * scale; // siempre 0
+}
+
+float Terrain::getHeightAt(int x, int z) const {
+    if (x < 0 || z < 0 || x >= width || z >= height)
+        return 0.0f;
+
+    float minH = heightData[0];
+    for (float h : heightData)
+        minH = std::min(minH, h);
+
+    return (heightData[z * width + x] - minH) * 300.0f;
 }

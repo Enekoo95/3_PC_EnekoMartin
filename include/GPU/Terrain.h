@@ -19,19 +19,25 @@ public:
     void bind() const;
     void draw() const;
 
-    // Altura mínima REAL del terreno
+    // Altura mínima REAL del terreno (para el agua)
     float getMinHeight(float scale) const;
 
-    // Tamaño del terreno (para ajustar agua)
+    // Tamaño del terreno (para agua y árboles)
     int getWidth() const { return width; }
     int getHeight() const { return height; }
 
+    // Altura exacta del terreno en una coordenada (árboles)
+    float getHeightAt(int x, int z) const;
+
 private:
-    int width, height;
+    int width = 0;
+    int height = 0;
     std::vector<float> heightData;
 
-    unsigned int VAO, VBO, EBO;
-    unsigned int indexCount;
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
+    unsigned int EBO = 0;
+    unsigned int indexCount = 0;
 };
 
 #endif
